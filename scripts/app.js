@@ -21,12 +21,15 @@ btnCancel.addEventListener('click', cancelWord);
 
 // variables
 
-let listword = ['museo', 'globo', 'vaso', 'interior', 'espina', 'trofeo', 'templo', 'cultura', 'pintura'];
+let listWord = ['MUSEO', 'GLOBO', 'VASO', 'INTERIOR', 'ESPINA', 'TROFEO', 'TEMPLO', 'CULTURA', 'PINTURA', 'CELULAR'];
+let selectedWord = [];
+let secretWord = '';
 
 
 // principal functions
 
 function startGame() {
+    secretWord = selectWord();
     showSection('none', 'none', 'flex');
 }
 
@@ -65,4 +68,23 @@ function showSection(start, input, game) {
     boxStart.style.display = start;
     boxInput.style.display = input;
     boxGame.style.display = game;
+}
+
+function selectWord() {
+    let order;
+    let notSelected = true;
+
+    if (selectedWord.length == 10) {
+        selectedWord = [];
+    }
+
+    do {
+        order = Math.floor((Math.random() * listWord.length));
+        if (!selectedWord.includes(order)) {
+            selectedWord.push(order);
+            notSelected = false;
+        }
+    } while (notSelected);
+
+    return listWord[order];
 }
