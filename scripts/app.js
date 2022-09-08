@@ -19,6 +19,23 @@ const btnCancel = document.querySelector('#btn__cancel');
 btnCancel.addEventListener('click', cancelWord);
 
 
+function setting() {
+    const imgCanvas = document.querySelector('#game__canvas__img');
+    const imgCanvasStyle = getComputedStyle(game__canvas__img);
+    imgCanvas.width = (imgCanvasStyle.width).split('px')[0];
+    imgCanvas.height = (imgCanvasStyle.height).split('px')[0];
+
+    const textCanvas = document.querySelector('#game__canvas__text');
+    const textCanvasStyle = getComputedStyle(game__canvas__text);
+    textCanvas.width = (textCanvasStyle.width).split('px')[0];
+    textCanvas.height = (textCanvasStyle.height).split('px')[0];
+}
+
+
+window.onload = setting;
+
+
+
 // variables
 
 let listWord = ['MUSEO', 'GLOBO', 'VASO', 'INTERIOR', 'ESPINA', 'TROFEO', 'TEMPLO', 'CULTURA', 'PINTURA', 'CELULAR'];
@@ -30,6 +47,7 @@ let secretWord = '';
 
 function startGame() {
     secretWord = selectWord();
+    drawUnderscore(secretWord);
     showSection('none', 'none', 'flex');
 }
 
@@ -57,6 +75,7 @@ function saveWord() {
 function cancelWord() {
     showSection('flex', 'none', 'none');
 }
+
 
 
 // helper functions
@@ -87,4 +106,40 @@ function selectWord() {
     } while (notSelected);
 
     return listWord[order];
+}
+
+function drawUnderscore(word) {
+    const textCanvas = document.querySelector('#game__canvas__text');
+    const ctx = textCanvas.getContext("2d");   
+    const percenUnderscore = 0.07543;
+    const percenSpace = 0.0431;
+    
+    if (ctx) {
+        
+        const widthCanvas = textCanvas.width;
+        const widthUnderscore = Math.round(widthCanvas * percenUnderscore);
+        const widthSpace = Math.round(widthCanvas * percenSpace);
+        const lenWord = word.length;
+        const positionV = 70;
+        
+        const startUnderscore = Math.round(widthCanvas / 2) - 
+                                Math.round((lenWord * widthUnderscore + (lenWord - 1) *
+                                widthSpace) / 2);
+
+        // limpiar canvas
+        textCanvas.width = textCanvas.width;
+
+        ctx.lineWidth = 3;    
+        ctx.strokeStyle = "#0A3871";
+        let startH = startUnderscore;
+        let endH = 0;
+
+        for (let i = 1; i <= word.length; i++) {
+            endH = startH + widthUnderscore;
+            ctx.moveTo(startH, positionV);
+            ctx.lineTo(endH, positionV);
+            startH = endH + widthSpace;              
+        }
+        ctx.stroke();
+    }
 }
