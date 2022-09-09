@@ -87,7 +87,13 @@ function showSection(start, input, game) {
     boxStart.style.display = start;
     boxInput.style.display = input;
     boxGame.style.display = game;
+    if (game === 'flex') {
+        window.addEventListener('keydown', keyCheck);
+    } else {
+        window.removeEventListener('keydown', keyCheck);
+    }
 }
+
 
 function selectWord() {
     let order;
@@ -108,38 +114,63 @@ function selectWord() {
     return listWord[order];
 }
 
+
 function drawUnderscore(word) {
     const textCanvas = document.querySelector('#game__canvas__text');
     const ctx = textCanvas.getContext("2d");   
-    const percenUnderscore = 0.07543;
-    const percenSpace = 0.0431;
-    
+    let startH = 0;
+    let endH = 0;
+    let widthUnderscore = 0;
+    let widthSpace = 0;
+    let positionV = 70;
+
     if (ctx) {
         
-        const widthCanvas = textCanvas.width;
-        const widthUnderscore = Math.round(widthCanvas * percenUnderscore);
-        const widthSpace = Math.round(widthCanvas * percenSpace);
-        const lenWord = word.length;
-        const positionV = 70;
-        
-        const startUnderscore = Math.round(widthCanvas / 2) - 
-                                Math.round((lenWord * widthUnderscore + (lenWord - 1) *
-                                widthSpace) / 2);
-
         // limpiar canvas
         textCanvas.width = textCanvas.width;
 
+        [startH, widthUnderscore, widthSpace] = initialPosition(textCanvas, word.length)
+
         ctx.lineWidth = 3;    
         ctx.strokeStyle = "#0A3871";
-        let startH = startUnderscore;
-        let endH = 0;
 
         for (let i = 1; i <= word.length; i++) {
             endH = startH + widthUnderscore;
+
             ctx.moveTo(startH, positionV);
             ctx.lineTo(endH, positionV);
+
             startH = endH + widthSpace;              
         }
         ctx.stroke();
     }
+}
+
+function initialPosition(textCanvas, lenWord) {
+    const percenUnderscore = 0.07543;
+    const percenSpace = 0.0431;
+
+    const widthCanvas = textCanvas.width;
+    const widthUnderscore = Math.round(widthCanvas * percenUnderscore);
+    const widthSpace = Math.round(widthCanvas * percenSpace);
+    
+    const startUnderscore = Math.round(widthCanvas / 2) - 
+                            Math.round((lenWord * widthUnderscore + (lenWord - 1) *
+                            widthSpace) / 2);
+
+    return [startUnderscore, widthUnderscore, widthSpace]    
+
+}
+
+
+function keyCheck(event) {
+
+    if (isLetter(event.keyCode)) {
+        console.log(event.key.toUpperCase());        
+    }
+}
+
+
+function isLetter(code) {
+    return (code >= 65 && code <= 90)
 }
