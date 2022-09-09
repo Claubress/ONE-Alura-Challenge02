@@ -38,16 +38,23 @@ window.onload = setting;
 
 // variables
 
-let listWord = ['MUSEO', 'GLOBO', 'VASO', 'INTERIOR', 'ESPINA', 'TROFEO', 'TEMPLO', 'CULTURA', 'PINTURA', 'CELULAR'];
+let listWord = ['MUSEO', 'GLOBO', 'VASO', 'INTERIOR', 'ESPINA', 'TROFEO', 'TEMPLO',
+                'CULTURA', 'PINTURA', 'CELULAR'];
 let selectedWord = [];
+let hitLetters = [];
 let secretWord = '';
+let hits = 0;
+
 
 
 // principal functions
 
-function startGame() {
-    secretWord = selectWord();
-    drawUnderscore(secretWord);
+function startGame() {    
+    selectedWord.splice(0, selectedWord.length)
+    hitLetters = [];
+    secretWord = '';
+    hits = 0;
+    start();
     showSection('none', 'none', 'flex');
 }
 
@@ -57,8 +64,11 @@ function addNewWord() {
 }
 
 
-function startNewGame() {
-    console.log('Iniciar nuevo juego');
+function startNewGame() {1
+    hitLetters = [];
+    secretWord = '';
+    hits = 0;
+    start();
 }
 
 
@@ -80,6 +90,13 @@ function cancelWord() {
 
 // helper functions
 
+function start() {
+    secretWord = selectWord(listWord, selectedWord);
+    console.log('start =>', 'secretWord:', secretWord);
+    drawUnderscore(secretWord.length);    
+}
+
+
 function showSection(start, input, game) {
     const boxStart = document.querySelector('.start');
     const boxInput = document.querySelector('.input');
@@ -95,46 +112,46 @@ function showSection(start, input, game) {
 }
 
 
-function selectWord() {
+function selectWord(words, wordSelected) {
     let order;
     let notSelected = true;
-
-    if (selectedWord.length == 10) {
-        selectedWord = [];
+    
+    if (wordSelected.length == 10) {
+        wordSelected.splice(0, wordSelected.length);
     }
 
     do {
-        order = Math.floor((Math.random() * listWord.length));
-        if (!selectedWord.includes(order)) {
-            selectedWord.push(order);
+        order = Math.floor((Math.random() * words.length));
+        if (!wordSelected.includes(order)) {
+            wordSelected.push(order);
             notSelected = false;
         }
     } while (notSelected);
 
-    return listWord[order];
+    return words[order];
 }
 
 
-function drawUnderscore(word) {
+function drawUnderscore(lenWord) {
     const textCanvas = document.querySelector('#game__canvas__text');
     const ctx = textCanvas.getContext("2d");   
     let startH = 0;
     let endH = 0;
     let widthUnderscore = 0;
     let widthSpace = 0;
-    let positionV = 70;
+    let positionV = 65;
 
     if (ctx) {
         
         // limpiar canvas
         textCanvas.width = textCanvas.width;
 
-        [startH, widthUnderscore, widthSpace] = initialPosition(textCanvas, word.length)
+        [startH, widthUnderscore, widthSpace] = initialPosition(textCanvas, lenWord)
 
         ctx.lineWidth = 3;    
         ctx.strokeStyle = "#0A3871";
-
-        for (let i = 1; i <= word.length; i++) {
+        ctx.fillStyle = "#0A3871"
+        for (let i = 1; i <= lenWord; i++) {
             endH = startH + widthUnderscore;
 
             ctx.moveTo(startH, positionV);
@@ -159,18 +176,80 @@ function initialPosition(textCanvas, lenWord) {
                             widthSpace) / 2);
 
     return [startUnderscore, widthUnderscore, widthSpace]    
-
 }
 
 
 function keyCheck(event) {
+    let letter = '';
 
     if (isLetter(event.keyCode)) {
-        console.log(event.key.toUpperCase());        
+        letter = event.key.toUpperCase();
+        if (secretWord.includes(letter)) {    
+            hits = hits + letterHit(secretWord, letter, hitLetters);            
+            if (hits === secretWord.length) {
+            console.log('keyCheck =>', 'ganaste');
+            }
+        } else {
+            console.log('keyCheck =>', 'ERROR !!!');
+
+        }
+
     }
 }
 
 
 function isLetter(code) {
     return (code >= 65 && code <= 90)
+}
+
+
+function letterHit(word, letter, listLetters) {
+    let newHits = 0;
+    if (!listLetters.includes(letter)) {
+        listLetters.push(letter);
+        for (let index = 0; index < word.length; index++) {
+            if (word[index] === letter) {
+                drawLetterHit(index, letter, word.length);
+                newHits++;
+            }    
+        }
+        return newHits
+    } else {
+        return 0;
+    }
+}
+
+
+function drawLetterHit(position, letter, lenWord) {
+
+    const textCanvas = document.querySelector('#game__canvas__text');
+    const ctx = textCanvas.getContext("2d");   
+
+    if (ctx) {
+        let startH = 0;
+        let endH = 0;
+        let widthUnderscore = 0;
+        let widthSpace = 0;
+        let positionV = 57;
+        let centerX = 0; 
+        let percenFont = 0.0862;
+
+        ctx.font = Math.round(textCanvas.width * percenFont) + 'px Inter';
+
+        ctx.strokeStyle = "#0A3871";
+        ctx.fillStyle = "#0A3871"
+        ctx.textAlign = 'center';
+
+        [startH, widthUnderscore, widthSpace] = initialPosition(textCanvas, lenWord)
+        centerX = widthUnderscore / 2;        
+
+        for (let i = 1; i <= position; i++) {
+            endH = startH + widthUnderscore;
+            startH = endH + widthSpace;              
+        }
+
+        ctx.fillText(letter, startH + centerX, positionV);
+    }
+
+
 }
