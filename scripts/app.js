@@ -148,14 +148,14 @@ function keyCheck(event) {
                 hits += letterHit(secretWord, letter, selectedLetters);
                 if (hits == secretWord.length) {
                     window.removeEventListener('keydown', keyCheck);
-                    console.log('keyCheck =>', 'ganaste !!!');
+                    drawEndMessage(true)
                 }
             } else {
                 mistakes += letterWrong(mistakes, letter, selectedLetters);
                 drawHanged(mistakes);
                 if (mistakes == 9) {
                     window.removeEventListener('keydown', keyCheck);
-                    console.log('keyCheck =>', 'perdiste !!!');
+                    drawEndMessage(false)
                 }
             }
         }
@@ -490,6 +490,36 @@ function drawEyeDead(ctx, centerX, centerY, eyeLine) {
     drawHangedLine(ctx, x0, y0, x1, y1);
 }
 
+
+function drawEndMessage(success) {
+    const imgCanvas = document.querySelector('#game__canvas__img');
+    const ctx = imgCanvas.getContext("2d");   
+
+    if (ctx) {
+        const widthCanvas = imgCanvas.width;
+        const heightCanvas = imgCanvas.height;
+        const percenFont = 0.1500;
+        const percenClear = 0.2272;
+        const heightFont = Math.round(widthCanvas * percenFont);
+        const clearFont = heightFont * percenClear;
+        const positionV = heightCanvas / 1.600;
+        const centerX = widthCanvas / 2;
+        ctx.textAlign = 'center';
+
+        ctx.font =  heightFont + 'px Inter';
+        ctx.strokeStyle = success ? 'green' : 'red';
+        ctx.fillStyle = success ? 'green' : 'red';
+        
+        if (success) {
+            ctx.clearRect(0, positionV - heightFont + clearFont, widthCanvas, heightFont * 2);    
+            ctx.fillText('Ganaste', centerX, positionV);
+            ctx.fillText('felicidades!', centerX, positionV + Math.round(widthCanvas * percenFont));
+        } else {
+            ctx.clearRect(0, positionV - heightFont + clearFont, widthCanvas, heightFont);    
+            ctx.fillText('Fin del juego!', centerX, positionV);
+        }
+    }
+}
 
 function drawHangedReset() {
     const imgCanvas = document.querySelector('#game__canvas__img');
