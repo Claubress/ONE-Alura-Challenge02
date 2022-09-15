@@ -1,25 +1,37 @@
-// events 
 
-const btnStartGame = document.querySelector('#btn__start__game');
-btnStartGame.addEventListener('click', startGame);
+// variables
 
-const btnNewWord = document.querySelector('#btn__start__word');
-btnNewWord.addEventListener('click', addNewWord);
-
-const btnNewGame = document.querySelector('#btn__new');
-btnNewGame.addEventListener('click', startNewGame);
-
-const btnDesist = document.querySelector('#btn__desist');
-btnDesist.addEventListener('click', desist);
-
-const btnSaveStart = document.querySelector('#btn__save');
-btnSaveStart.addEventListener('click', saveWord);
-
-const btnCancel = document.querySelector('#btn__cancel');
-btnCancel.addEventListener('click', cancelWord);
+let listWord = ['MUSEO', 'GLOBO', 'VASO', 'INTERIOR', 'ESPINA', 'TROFEO', 'TEMPLO',
+                'CULTURA', 'PINTURA', 'CELULAR'];
+let selectedWord = [];
+let selectedLetters = [];
+let secretWord = '';
+let hits = 0;
+let mistakes = 0;
 
 
 function setting() {
+    // events 
+    
+    const btnStartGame = document.querySelector('#btn__start__game');
+    btnStartGame.addEventListener('click', startGame);
+    
+    const btnNewWord = document.querySelector('#btn__start__word');
+    btnNewWord.addEventListener('click', addNewWord);
+    
+    const btnNewGame = document.querySelector('#btn__new');
+    btnNewGame.addEventListener('click', startNewGame);
+    
+    const btnDesist = document.querySelector('#btn__desist');
+    btnDesist.addEventListener('click', desist);
+    
+    const btnSaveStart = document.querySelector('#btn__save');
+    btnSaveStart.addEventListener('click', saveWord);
+    
+    const btnCancel = document.querySelector('#btn__cancel');
+    btnCancel.addEventListener('click', cancelWord);
+
+    // canvas
     const imgCanvas = document.querySelector('#game__canvas__img');
     const imgCanvasStyle = getComputedStyle(game__canvas__img);
     imgCanvas.width = (imgCanvasStyle.width).split('px')[0];
@@ -36,26 +48,14 @@ window.onload = setting;
 
 
 
-// variables
-
-let listWord = ['MUSEO', 'GLOBO', 'VASO', 'INTERIOR', 'ESPINA', 'TROFEO', 'TEMPLO',
-                'CULTURA', 'PINTURA', 'CELULAR'];
-let selectedWord = [];
-let selectedLetters = [];
-let secretWord = '';
-let hits = 0;
-let mistakes = 0;
-let keydownActive = false; 
-
-
 // principal functions
 
 function startGame() {    
     selectedWord.splice(0, selectedWord.length);
     selectedLetters.splice(0, selectedLetters.length);
-    secretWord = '';
     hits = 0;
     mistakes = 0;
+    secretWord = selectWord(listWord, selectedWord);
     start();
     showSection('none', 'none', 'flex');
 }
@@ -71,8 +71,8 @@ function startNewGame() {1
     secretWord = '';
     hits = 0;
     mistakes = 0;
-    window.removeEventListener('keydown', keyCheck);
-    window.addEventListener('keydown', keyCheck);    
+    switchEventKey(true);
+    secretWord = selectWord(listWord, selectedWord);
     start();
 }
 
@@ -83,7 +83,16 @@ function desist() {
 
 
 function saveWord() {
-    showSection('none', 'none', 'flex');
+    secretWord = addWords(listWord);
+
+    if (secretWord) {
+        selectedWord.splice(0, selectedWord.length);
+        selectedLetters.splice(0, selectedLetters.length);
+        hits = 0;
+        mistakes = 0;
+        start();
+        showSection('none', 'none', 'flex');
+    }
 }
 
 
@@ -95,11 +104,27 @@ function cancelWord() {
 
 // helper functions
 
+function switchEventKey(state) {
+    const txtKey = document.querySelector('#inputKey');
+    if (state) {
+        txtKey.removeEventListener('input', keyCheck);
+        txtKey.addEventListener('input', keyCheck);
+        txtKey.removeEventListener('blur', keepFocus);
+        txtKey.addEventListener('blur', keepFocus);
+    } else {
+        txtKey.removeEventListener('input', keyCheck);
+        txtKey.removeEventListener('blur', keepFocus);
+    }
+}
+
+
 function start() {
-    secretWord = selectWord(listWord, selectedWord);
-    console.log('start =>', 'secretWord:', secretWord);
+    //console.log('start =>', 'secretWord:', secretWord);
     drawHangedReset();
-    drawUnderscore(secretWord.length);    
+    drawUnderscore(secretWord.length);
+    const txtKey = document.querySelector('#inputKey');
+    txtKey.focus();
+    
 }
 
 
@@ -110,13 +135,25 @@ function showSection(start, input, game) {
     boxStart.style.display = start;
     boxInput.style.display = input;
     boxGame.style.display = game;
+
+    if (input === 'flex') {
+        const txtWord = document.querySelector('.input__word');
+        txtWord.focus();
+        txtWord.value = '';
+    }
+
     if (game === 'flex') {
-        window.addEventListener('keydown', keyCheck);
+        const txtKey = document.querySelector('#inputKey');
+        txtKey.focus();
+        switchEventKey(true);
     } else {
-        window.removeEventListener('keydown', keyCheck);
+        switchEventKey(false);
     }
 }
 
+
+
+// add Word
 
 function selectWord(words, wordSelected) {
     let order;
@@ -138,24 +175,58 @@ function selectWord(words, wordSelected) {
 }
 
 
+function addWords(words) {
+    const txtWord = document.querySelector('.input__word');
+    const newWord = txtWord.value.toUpperCase();
+    if (isValid(newWord)) {
+        if (!words.includes(newWord)) {
+            words.push(newWord);
+            txtWord.value = '';
+            return newWord;
+        } else {
+            alert( newWord[0] + newWord.substring(1).toLowerCase() + ' ya ha sido incluida');
+        }
+    }
+    return null;
+}
+
+
+function isValid(text) {
+    var isValid = false;
+    if (/^[A-Z\u00D1]+$/.test(text)) {
+        isValid = true;
+    }
+    if(!isValid){
+        alert('Por favor ingrese una palabra utilizando\n' + 'sólo letras sin acento');
+    }
+    return isValid;
+}
+
+
+
+// game 
+
 function keyCheck(event) {
+    const txtKey = document.querySelector('#inputKey');
+    txtKey.value = '';
+
     let letter = '';
 
-    if (isLetter(event.keyCode)) {
-        letter = event.key.toUpperCase();
+    if (isLetter(event.data.toUpperCase().charCodeAt())) {
+        letter = event.data.toUpperCase();
         if (!selectedLetters.includes(letter)) {
             if (secretWord.includes(letter)) {    
                 hits += letterHit(secretWord, letter, selectedLetters);
                 if (hits == secretWord.length) {
-                    window.removeEventListener('keydown', keyCheck);
-                    drawEndMessage(true)
+                    switchEventKey(false);
+                    drawEndMessage(true);
                 }
             } else {
                 mistakes += letterWrong(mistakes, letter, selectedLetters);
                 drawHanged(mistakes);
                 if (mistakes == 9) {
-                    window.removeEventListener('keydown', keyCheck);
-                    drawEndMessage(false)
+                    switchEventKey(false);
+                    drawEndMessage(false);
                 }
             }
         }
@@ -163,17 +234,23 @@ function keyCheck(event) {
 }
 
 
+function keepFocus() {
+    const txtKey = document.querySelector('#inputKey');
+    txtKey.focus();
+}
+
+
 function isLetter(code) {
-    return (code >= 65 && code <= 90)
+    return ((code >= 65 && code <= 90) || code == 209 )
 }
 
 
 function letterHit(word, letter, listLetters) {
     let newHits = 0;
     listLetters.push(letter);
-    for (let index = 0; index < word.length; index++) {
-        if (word[index] === letter) {
-            drawLetterHit(index, letter, word.length);
+    for (let i = 0; i < word.length; i++) {
+        if (word[i] === letter) {
+            drawLetterHit(i, letter, word.length);
             newHits++;
         }    
     }
@@ -182,7 +259,7 @@ function letterHit(word, letter, listLetters) {
 
 
 function letterWrong(mistakes, letter, listLetters) {
-    let newWroung = 1;
+    const newWroung = 1;
     listLetters.push(letter);
     drawLetterWrong(mistakes, letter);
     return newWroung;
@@ -215,6 +292,7 @@ function drawUnderscore(lenWord) {
     if (ctx) {
         const heightCanvas = textCanvas.height;
         const percenHeight = 0.4276;
+        const percenLine = 0.0197;
         const positionV = heightCanvas * percenHeight;
 
         let startH = 0;
@@ -227,7 +305,7 @@ function drawUnderscore(lenWord) {
 
         [startH, widthUnderscore, widthSpace] = initialPosition(textCanvas, lenWord)
 
-        ctx.lineWidth = 3;    
+        ctx.lineWidth = Math.round(heightCanvas * percenLine);    
         ctx.strokeStyle = "#0A3871";
         ctx.fillStyle = "#0A3871"
         for (let i = 1; i <= lenWord; i++) {
@@ -289,17 +367,17 @@ function drawLetterWrong(position, letter) {
         const percenFont = 0.0517;
         const percenHeight = 0.7894;
         const widthFont = Math.round(widthCanvas * percenFont);
-        const centerX = Math.round(widthCanvas * percenFont) / 2;
+        const centerX = Math.round((widthCanvas * percenFont) / 2); // ver
         const positionV = heightCanvas * percenHeight;
+        const startH = Math.round(widthCanvas * 0.2694);
 
         ctx.font = Math.round(widthCanvas * percenFont) + 'px Inter';            
         ctx.strokeStyle = "#495057";
         ctx.fillStyle = "#495057"
         ctx.textAlign = 'center';
 
-        const startH = Math.round(widthCanvas * 0.2694);
 
-        ctx.fillText(letter, startH + (widthFont * (position)) + centerX, positionV);
+        ctx.fillText(letter, startH + (widthFont * position) + centerX, positionV);
     }
 }
 
@@ -309,10 +387,10 @@ function drawHanged(mistake) {
     const ctx = imgCanvas.getContext("2d");   
     
     if (ctx) {
-        ctx.lineWidth = 6;
-
         const heightCanvas = imgCanvas.height;
         const widthCanvas = imgCanvas.width;
+    
+        ctx.lineWidth = Math.round(widthCanvas * 0.0129);
         const margin = ctx.lineWidth / 2
         const axisFirst = widthCanvas * 0.2743;
         const axisSecond = widthCanvas * 0.833;
@@ -405,7 +483,7 @@ function drawHangedHead(ctx, radius, centerX, longCord) {
 
 
 function drawFace(ctx, radius, centerX, centerY, draw) {
-    ctx.lineWidth = 3;
+    ctx.lineWidth = radius * 0.0952;
     const eyeSeparation =  radius * 0.4128;
     const eyeHeight = radius * 0.3175;
     const mouthHeight = radius * 0.07;
@@ -444,7 +522,7 @@ function drawEye(ctx, centerX, centerY, radius) {
 
 
 function drawFaceDead(ctx, radius, centerX, centerY) {
-    ctx.lineWidth = 4;
+    ctx.lineWidth = radius * 0.1270;
     const eyeLine = radius * 0.20;
     const eyeSeparation =  radius * 0.4128;
     const eyeHeight = radius * 0.3175;
@@ -521,6 +599,7 @@ function drawEndMessage(success) {
     }
 }
 
+
 function drawHangedReset() {
     const imgCanvas = document.querySelector('#game__canvas__img');
     const ctx = imgCanvas.getContext("2d");   
@@ -529,17 +608,16 @@ function drawHangedReset() {
     if (ctx) {
         const heightCanvas = imgCanvas.height;
         const widthCanvas = imgCanvas.width;
+        const percenLine =  0.0172;
 
-        ctx.lineWidth = 8;
+        ctx.lineWidth = Math.round(widthCanvas * percenLine);
         const margin = ctx.lineWidth / 2
         ctx.strokeStyle = "#0A3871";
         ctx.fillStyle = "#0A3871"
         ctx.lineCap = "round";
        
-        ctx.beginPath();
-        ctx.moveTo(0 + margin , heightCanvas - margin);
-        ctx.lineTo(widthCanvas - margin, heightCanvas - margin);
-        ctx.stroke();
-        ctx.closePath();
+        drawHangedLine(ctx, 0 + margin, heightCanvas - margin, widthCanvas - margin,
+                       heightCanvas - margin);
+
     }
 }
